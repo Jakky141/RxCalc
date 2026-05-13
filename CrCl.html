@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CrCl Calculator</title>
+    <!-- CSS Dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Kanit', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            touch-action: none;
+        }
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            height: 100dvh;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 12px;
+        }
+        .glass-card {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            border: 1px solid #f1f5f9;
+        }
+        .picker-container {
+            height: 250px;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            position: relative;
+            background: #f1f5f9;
+            border-radius: 12px;
+            touch-action: pan-y;
+        }
+        .picker-container::-webkit-scrollbar {
+            display: none;
+        }
+        .picker-item {
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            scroll-snap-align: center;
+            font-size: 1.3rem;
+            color: #94a3b8;
+            transition: color 0.2s ease, font-size 0.2s ease;
+        }
+        .picker-item.selected {
+            color: #2563eb;
+            font-weight: 600;
+            font-size: 2.2rem;
+        }
+        .picker-highlight {
+            position: absolute;
+            top: 100px; /* (Container height 250 - item height 50) / 2 - offset adjustment */
+            left: 3%;
+            right: 3%;
+            height: 50px;
+            background: rgba(37, 99, 235, 0.08);
+            border-top: 2px solid rgba(37, 99, 235, 0.2);
+            border-bottom: 2px solid rgba(37, 99, 235, 0.2);
+            pointer-events: none;
+            z-index: 10;
+            border-radius: 10px;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+        .value-display-input {
+            width: 100%;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1d4ed8;
+            text-align: center;
+            padding: 8px 0;
+            background: #eff6ff;
+            border-radius: 16px;
+            margin-top: 10px;
+            border: 2px solid #3b82f6;
+            transition: all 0.2s;
+            outline: none;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.1);
+        }
+        .value-display-input:focus {
+            background: white;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+        }
+        .value-display-input::-webkit-inner-spin-button, 
+        .value-display-input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .gender-btn {
+            flex: 1;
+            padding: 12px 0;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .gender-btn.active {
+            background-color: #2563eb;
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        .gender-btn.inactive {
+            background-color: #f1f5f9;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <header class="text-center py-2 flex-none">
+            <h1 class="text-[30px] font-bold text-blue-600">CrCl Calculator</h1>
+            <p class="text-slate-400 text-[13px] tracking-[0.2em] uppercase font-medium">Cockcroft-Gault Equation</p>
+        </header>
+
+        <!-- Gender Selection -->
+        <div class="glass-card p-1.5 mb-3 flex-none">
+            <div class="flex gap-2">
+                <button onclick="setGender('male')" id="btn-male" class="gender-btn active">Male</button>
+                <button onclick="setGender('female')" id="btn-female" class="gender-btn inactive">Female</button>
+            </div>
+        </div>
+
+        <!-- Input Grid -->
+        <div class="flex gap-2 flex-none mb-3">
+            <!-- Age Column -->
+            <div class="flex-[0.7] flex flex-col">
+                <div class="text-[10px] font-bold text-slate-500 text-center mb-1 uppercase">Age (Yr)</div>
+                <div class="glass-card p-1 relative overflow-hidden">
+                    <div class="picker-highlight"></div>
+                    <div class="picker-container" id="picker-age-int">
+                        <div class="picker-content" id="content-age-int"></div>
+                    </div>
+                </div>
+                <input type="number" id="val-age" class="value-display-input" value="60" inputmode="numeric" pattern="[0-9]*" onchange="inputToPicker('age', this.value)">
+            </div>
+
+            <!-- Weight Column -->
+            <div class="flex-1 flex flex-col">
+                <div class="text-[10px] font-bold text-slate-500 text-center mb-1 uppercase">Weight (Kg)</div>
+                <div class="glass-card p-1 relative overflow-hidden">
+                    <div class="picker-highlight"></div>
+                    <div class="flex gap-0.5">
+                        <div class="flex-[1.5] picker-container" id="picker-w-int">
+                            <div class="picker-content" id="content-w-int"></div>
+                        </div>
+                        <div class="flex-1 picker-container" id="picker-w-dec">
+                            <div class="picker-content" id="content-w-dec"></div>
+                        </div>
+                    </div>
+                </div>
+                <input type="number" id="val-weight" step="0.1" class="value-display-input" value="60.0" inputmode="decimal" onchange="inputToPicker('weight', this.value)">
+            </div>
+
+            <!-- Serum Creatinine Column -->
+            <div class="flex-1 flex flex-col">
+                <div class="text-[10px] font-bold text-slate-500 text-center mb-1 ">SCr (mg/dL)</div>
+                <div class="glass-card p-1 relative overflow-hidden">
+                    <div class="picker-highlight"></div>
+                    <div class="flex gap-0.5">
+                        <div class="flex-[1.2] picker-container" id="picker-s-int">
+                            <div class="picker-content" id="content-s-int"></div>
+                        </div>
+                        <div class="flex-1 picker-container" id="picker-s-dec">
+                            <div class="picker-content" id="content-s-dec"></div>
+                        </div>
+                    </div>
+                </div>
+                <input type="number" id="val-scr" step="0.01" class="value-display-input" value="1.00" inputmode="decimal" onchange="inputToPicker('scr', this.value)">
+            </div>
+        </div>
+
+        <!-- Result Display -->
+        <div class="flex-none">
+            <div class="gradient-bg rounded-[25px] p-4 text-white text-center shadow-lg shadow-blue-100">
+                <p class="text-blue-100 text-[10px] mb-1 uppercase tracking-widest font-medium opacity-80">Creatinine Clearance</p>
+                <div class="flex items-baseline justify-center gap-1">
+                    <span class="text-5xl font-bold tracking-tighter" id="result-val">--</span>
+                    <span class="text-lg text-blue-200 font-light">ml/min</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex-grow flex flex-col justify-end">
+            <footer class="text-center pt-4 pb-2">
+                <p class="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">ภก.วิจักขณ์ พลอินทร์</p>
+                <p class="text-slate-400 text-[9px]">โรงพยาบาลรัษฎา จ.ตรัง</p>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        let gender = 'male';
+        let ageInt = 60, wInt = 60, wDec = 0, sInt = 1, sDec = 0;
+        const ITEM_H = 50; 
+        const pickers = {};
+
+        function init() {
+            setup('age', 'content-age-int', 1, 120, 60, true, v => { ageInt = v; calc(); updateDisplay('age'); });
+            setup('w-int', 'content-w-int', 1, 200, 60, true, v => { wInt = v; calc(); updateDisplay('weight'); });
+            setup('w-dec', 'content-w-dec', 0, 9, 0, true, v => { wDec = v; calc(); updateDisplay('weight'); });
+            setup('s-int', 'content-s-int', 0, 15, 1, true, v => { sInt = v; calc(); updateDisplay('scr'); });
+            setup('s-dec', 'content-s-dec', 0, 99, 0, true, v => { sDec = v; calc(); updateDisplay('scr'); });
+            calc();
+        }
+
+        function setup(key, id, min, max, initVal, loop, cb) {
+            const el = document.getElementById(id);
+            const wrap = el.parentElement;
+            const count = max - min + 1;
+            pickers[key] = { wrap, min, max, loop, count };
+
+            let h = "";
+            const sets = 5; // Using 5 sets for smooth infinite scroll redundancy
+            for (let s = 0; s < sets; s++) {
+                for (let i = min; i <= max; i++) {
+                    let txt = (id.includes('s-dec') && i < 10) ? '0'+i : i;
+                    h += `<div class="picker-item" data-v="${i}">${txt}</div>`;
+                }
+            }
+            el.innerHTML = h;
+
+            const handleScroll = () => {
+                const scrollPos = wrap.scrollTop;
+                const totalH = count * ITEM_H;
+
+                // Infinite Warp Logic
+                if (scrollPos < totalH) {
+                    wrap.scrollTop += totalH * 2;
+                } else if (scrollPos > totalH * 3) {
+                    wrap.scrollTop -= totalH * 2;
+                }
+
+                // Selection detection (Center item)
+                const idx = Math.round((wrap.scrollTop + 100) / ITEM_H);
+                const items = el.querySelectorAll('.picker-item');
+                
+                items.forEach((item, i) => {
+                    if (i === idx) {
+                        if (!item.classList.contains('selected')) {
+                            item.classList.add('selected');
+                            const val = parseInt(item.dataset.v);
+                            if (!isNaN(val)) cb(val);
+                        }
+                    } else item.classList.remove('selected');
+                });
+            };
+
+            wrap.onscroll = handleScroll;
+            let isScrolling;
+            wrap.addEventListener('scroll', () => {
+                window.clearTimeout(isScrolling);
+                isScrolling = setTimeout(() => {
+                    const scrollPos = wrap.scrollTop;
+                    const snapIdx = Math.round(scrollPos / ITEM_H);
+                    wrap.scrollTo({ top: snapIdx * ITEM_H, behavior: 'smooth' });
+                }, 60);
+            });
+
+            setTimeout(() => {
+                const startIdx = (initVal - min) + (count * 2) - 2; 
+                wrap.scrollTop = startIdx * ITEM_H; 
+                handleScroll();
+            }, 100);
+        }
+
+        function inputToPicker(type, val) {
+            const num = parseFloat(val);
+            if (isNaN(num)) return;
+
+            if (type === 'age') {
+                const v = Math.max(1, Math.min(120, Math.round(num)));
+                const targetIdx = (v - pickers['age'].min) + (pickers['age'].count * 2) - 2;
+                pickers['age'].wrap.scrollTo({ top: targetIdx * ITEM_H, behavior: 'smooth' });
+            } else if (type === 'weight') {
+                const v = Math.max(1, Math.min(200.9, num));
+                const intPart = Math.floor(v);
+                const decPart = Math.round((v - intPart) * 10);
+                
+                const targetIntIdx = (intPart - pickers['w-int'].min) + (pickers['w-int'].count * 2) - 2;
+                pickers['w-int'].wrap.scrollTo({ top: targetIntIdx * ITEM_H, behavior: 'smooth' });
+                
+                const targetDecIdx = (decPart - pickers['w-dec'].min) + (pickers['w-dec'].count * 2) - 2;
+                pickers['w-dec'].wrap.scrollTo({ top: targetDecIdx * ITEM_H, behavior: 'smooth' });
+            } else if (type === 'scr') {
+                const v = Math.max(0, Math.min(15.99, num));
+                const intPart = Math.floor(v);
+                const decPart = Math.round((v - intPart) * 100);
+                
+                const targetIntIdx = (intPart - pickers['s-int'].min) + (pickers['s-int'].count * 2) - 2;
+                pickers['s-int'].wrap.scrollTo({ top: targetIntIdx * ITEM_H, behavior: 'smooth' });
+                
+                const targetDecIdx = (decPart - pickers['s-dec'].min) + (pickers['s-dec'].count * 2) - 2;
+                pickers['s-dec'].wrap.scrollTo({ top: targetDecIdx * ITEM_H, behavior: 'smooth' });
+            }
+        }
+
+        const getW = () => `${wInt}.${wDec}`;
+        const getS = () => `${sInt}.${sDec < 10 ? '0'+sDec : sDec}`;
+
+        function updateDisplay(type) {
+            const input = document.getElementById(`val-${type}`);
+            if (document.activeElement === input) return; 
+            if (type === 'age') input.value = ageInt;
+            if (type === 'weight') input.value = parseFloat(getW()).toFixed(1);
+            if (type === 'scr') input.value = parseFloat(getS()).toFixed(2);
+        }
+
+        function setGender(g) {
+            gender = g;
+            document.getElementById('btn-male').className = `gender-btn ${g === 'male' ? 'active' : 'inactive'}`;
+            document.getElementById('btn-female').className = `gender-btn ${g === 'female' ? 'active' : 'inactive'}`;
+            calc();
+        }
+
+        function calc() {
+            const a = parseFloat(ageInt);
+            const w = parseFloat(getW());
+            const s = parseFloat(getS());
+            
+            if (s <= 0 || isNaN(s)) {
+                document.getElementById('result-val').innerText = "--";
+                return;
+            }
+            
+            // Cockcroft-Gault Equation
+            let res = ((140 - a) * w) / (72 * s);
+            if (gender === 'female') res *= 0.85;
+            
+            document.getElementById('result-val').innerText = res.toFixed(1);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
