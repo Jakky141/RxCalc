@@ -11,7 +11,7 @@
         :root {
             --item-h: 45px;
             --container-h: 180px;
-            --offset: 67.5px; /* (180/2) - (45/2) */
+            --offset: 67.5px;
         }
         html, body {
             height: 100%;
@@ -26,7 +26,7 @@
             display: flex;
             flex-direction: column;
             height: 100dvh;
-            max-width: 500px;
+            max-width: 600px;
             margin: 0 auto;
             padding: 12px;
         }
@@ -79,21 +79,24 @@
             z-index: 10;
             border-radius: 8px;
         }
-        .gradient-crcl {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        }
         .value-display-input {
             width: 100%;
             font-size: 1.5rem;
             font-weight: 700;
             color: #1d4ed8;
             text-align: center;
-            padding: 4px 0;
+            padding: 8px 0;
             background: #eff6ff;
             border-radius: 12px;
             margin-top: 6px;
             border: 2px solid #3b82f6;
             outline: none;
+            transition: border-color 0.2s;
+        }
+        .value-display-input:focus {
+            border-color: #2563eb;
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
         }
         .gender-btn {
             flex: 1;
@@ -101,7 +104,6 @@
             border-radius: 12px;
             font-weight: 500;
             transition: all 0.2s;
-            font-size: 1.6rem;
         }
         .gender-btn.active {
             background-color: #2563eb;
@@ -112,16 +114,21 @@
             background-color: #f1f5f9;
             color: #64748b;
         }
-        .result-box {
+        .result-card {
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border: 2px solid transparent;
         }
     </style>
 </head>
 <body>
     <div class="main-container">
         <header class="text-center py-2 flex-none">
-            <h1 class="text-[30px] font-bold text-blue-600 leading-tight">Renal Function</h1>
+            <h1 class="text-[28px] font-bold text-blue-600 leading-tight">Renal Function</h1>
             <p class="text-slate-400 text-[10px] tracking-[0.2em] uppercase font-medium">Calculator Professional</p>
         </header>
 
@@ -132,22 +139,24 @@
             </div>
         </div>
 
-        <div class="flex gap-2 flex-none mb-3">
-            <!-- Age Picker -->
+        <div class="flex gap-2 flex-none mb-4">
+            <!-- Age Picker & Input -->
             <div class="flex-[0.7] flex flex-col">
-                <div class="text-[20px] font-bold text-slate-500 text-center mb-1">Age (Yr)</div>
+                <div class="text-[16px] font-bold text-slate-500 text-center mb-1">Age (Yr)</div>
                 <div class="glass-card p-1 relative overflow-hidden">
                     <div class="picker-highlight"></div>
                     <div class="picker-container" id="picker-age-int">
                         <div class="picker-content" id="content-age-int"></div>
                     </div>
                 </div>
-                <input type="number" id="val-age" class="value-display-input" value="60" onchange="inputToPicker('age', this.value)">
+                <input type="number" id="val-age" class="value-display-input" value="60" 
+                       inputmode="numeric" pattern="[0-9]*"
+                       onchange="inputToPicker('age', this.value)">
             </div>
 
-            <!-- Weight Picker -->
+            <!-- Weight Picker & Input -->
             <div class="flex-1 flex flex-col">
-                <div class="text-[20px] font-bold text-slate-500 text-center mb-1">Weight (Kg)</div>
+                <div class="text-[16px] font-bold text-slate-500 text-center mb-1">Weight (Kg)</div>
                 <div class="glass-card p-1 relative overflow-hidden">
                     <div class="picker-highlight"></div>
                     <div class="flex gap-0.5">
@@ -159,12 +168,14 @@
                         </div>
                     </div>
                 </div>
-                <input type="number" id="val-weight" step="0.1" class="value-display-input" value="60.0" onchange="inputToPicker('weight', this.value)">
+                <input type="number" id="val-weight" step="0.1" class="value-display-input" value="60.0" 
+                       inputmode="decimal"
+                       onchange="inputToPicker('weight', this.value)">
             </div>
 
-            <!-- SCr Picker -->
+            <!-- SCr Picker & Input -->
             <div class="flex-1 flex flex-col">
-                <div class="text-[20px] font-bold text-slate-500 text-center mb-1">SCr (mg/dL)</div>
+                <div class="text-[16px] font-bold text-slate-500 text-center mb-1">SCr (mg/dL)</div>
                 <div class="glass-card p-1 relative overflow-hidden">
                     <div class="picker-highlight"></div>
                     <div class="flex gap-0.5">
@@ -176,39 +187,33 @@
                         </div>
                     </div>
                 </div>
-                <input type="number" id="val-scr" step="0.01" class="value-display-input" value="1.00" onchange="inputToPicker('scr', this.value)">
+                <input type="number" id="val-scr" step="0.01" class="value-display-input" value="1.00" 
+                       inputmode="decimal"
+                       onchange="inputToPicker('scr', this.value)">
             </div>
         </div>
 
-        <div class="flex flex-col gap-2 flex-none">
+        <!-- Triple Results Row -->
+        <div id="results-container" class="flex gap-2 flex-none">
             <!-- CrCl Box -->
-            <div class="gradient-crcl rounded-[22px] p-3 text-white shadow-md flex items-center justify-between px-6 border-b-4 border-blue-900/30">
-                <div>
-                    <p class="text-blue-100 text-[20px] tracking-widest font-bold opacity-80">CrCl</p>
-                    <p class="text-[20px] text-blue-200">ml/min</p>
-                </div>
-                <span class="text-4xl font-bold tracking-tighter" id="result-crcl">--</span>
+            <div id="crcl-box" class="result-card flex-1 rounded-[22px] p-3 shadow-md border-2">
+                <p class="text-[16px] font-extrabold opacity-70">CrCl</p>
+                <span id="result-crcl" class="text-3xl font-black tracking-tighter">--</span>
+                <p class="text-[10px] font-medium opacity-80">ml/min</p>
             </div>
 
-            <!-- Dual Results Box -->
-            <div class="flex gap-2">
-                <!-- eGFR Box -->
-                <div id="egfr-box" class="result-box flex-1 rounded-[22px] p-4 shadow-lg border-2 flex flex-col justify-center items-center text-center">
-                    <p class="text-[20px] tracking-tighter font-extrabold mb-1 opacity-70">eGFR</p>
-                    <div class="flex flex-col">
-                        <span id="result-egfr" class="text-4xl font-black tracking-tighter leading-none">--</span>
-                        <span class="text-[20px] font-medium mt-1">ml/min/1.73m²</span>
-                    </div>
-                </div>
+            <!-- eGFR Box -->
+            <div id="egfr-box" class="result-card flex-1 rounded-[22px] p-3 shadow-md border-2">
+                <p class="text-[16px] font-extrabold opacity-70">eGFR</p>
+                <span id="result-egfr" class="text-3xl font-black tracking-tighter">--</span>
+                <p class="text-[10px] font-medium opacity-80">ml/min/1.73m²</p>
+            </div>
 
-                <!-- Stage Box -->
-                <div id="stage-box" class="result-box flex-1 rounded-[22px] p-4 shadow-lg border-2 flex flex-col justify-center items-center text-center">
-                    <p class="text-[20px] tracking-tighter font-extrabold mb-1 opacity-70">Renal Stage</p>
-                    <div class="flex flex-col">
-                        <span id="stage-text" class="text-4xl font-black tracking-tighter leading-none">--</span>
-                        <span id="stage-desc" class="text-[20px] font-bold mt-1 line-clamp-1">Enter data</span>
-                    </div>
-                </div>
+            <!-- Stage Box -->
+            <div id="stage-box" class="result-card flex-1 rounded-[22px] p-3 shadow-md border-2">
+                <p class="text-[16px] font-extrabold opacity-70">Stage</p>
+                <span id="stage-text" class="text-3xl font-black tracking-tighter">--</span>
+                <p id="stage-desc" class="text-[10px] font-bold truncate w-full px-1">Wait...</p>
             </div>
         </div>
 
@@ -322,10 +327,13 @@
             calc();
         }
 
-        function updateUI(egfr) {
-            const boxL = document.getElementById('egfr-box');
-            const boxR = document.getElementById('stage-box');
-            const resultText = document.getElementById('result-egfr');
+        function updateUI(egfr, crcl) {
+            const boxCrCl = document.getElementById('crcl-box');
+            const boxEgfr = document.getElementById('egfr-box');
+            const boxStage = document.getElementById('stage-box');
+            
+            const resultCrCl = document.getElementById('result-crcl');
+            const resultEgfr = document.getElementById('result-egfr');
             const stageText = document.getElementById('stage-text');
             const descText = document.getElementById('stage-desc');
             
@@ -338,26 +346,27 @@
                 stage = "2"; desc = "Mild loss"; 
                 bg = "#dcfce7"; text = "#14532d"; border = "#86efac"; 
             } else if (egfr >= 45) {
-                stage = "3a"; desc = "Mild-Mod loss"; 
+                stage = "3a"; desc = "Mild-Mod"; 
                 bg = "#fefce8"; text = "#854d0e"; border = "#fde047"; 
             } else if (egfr >= 30) {
-                stage = "3b"; desc = "Mod-Severe loss"; 
+                stage = "3b"; desc = "Mod-Severe"; 
                 bg = "#fff7ed"; text = "#9a3412"; border = "#fdba74"; 
             } else if (egfr >= 15) {
                 stage = "4"; desc = "Severe loss"; 
                 bg = "#fef2f2"; text = "#991b1b"; border = "#fca5a5"; 
             } else {
                 stage = "5"; desc = "Failure"; 
-                bg = "#450a0a"; text = "#fee2e2"; border = "#7f1d1d"; 
+                bg = "#edb5ca"; text = "#991b1b"; border = "#e70459"; 
             }
 
-            [boxL, boxR].forEach(box => {
+            [boxCrCl, boxEgfr, boxStage].forEach(box => {
                 box.style.backgroundColor = bg;
                 box.style.borderColor = border;
                 box.style.color = text;
             });
 
-            resultText.innerText = Math.round(egfr);
+            resultCrCl.innerText = crcl.toFixed(0);
+            resultEgfr.innerText = Math.round(egfr);
             stageText.innerText = stage;
             descText.innerText = desc;
         }
@@ -366,17 +375,18 @@
             const a = ageInt, w = getW(), s = getS();
             if (s <= 0) return;
             
+            // Cockcroft-Gault
             let crcl = ((140 - a) * w) / (72 * s);
             if (gender === 'female') crcl *= 0.85;
-            document.getElementById('result-crcl').innerText = crcl.toFixed(1);
 
+            // CKD-EPI 2021
             const kappa = (gender === 'female') ? 0.7 : 0.9;
             const alpha = (gender === 'female') ? -0.241 : -0.302;
             const genderFactor = (gender === 'female') ? 1.012 : 1.0;
             const scrOverKappa = s / kappa;
             const egfr = 142 * Math.pow(Math.min(scrOverKappa, 1), alpha) * Math.pow(Math.max(scrOverKappa, 1), -1.200) * Math.pow(0.9938, a) * genderFactor;
             
-            updateUI(egfr);
+            updateUI(egfr, crcl);
         }
 
         window.onload = init;
